@@ -6,7 +6,6 @@ import android.os.Looper
 import androidx.annotation.VisibleForTesting
 import androidx.annotation.VisibleForTesting.PRIVATE
 import com.mapbox.bindgen.Value
-import com.mapbox.common.Logger
 import com.mapbox.geojson.Feature
 import com.mapbox.geojson.Geometry
 import com.mapbox.geojson.Point
@@ -169,51 +168,38 @@ class MapboxMap internal constructor(
     onStyleLoaded: Style.OnStyleLoaded? = null
   ) {
     this.style = style
-    var geojsonNotParsedCount = 0
-    var hasGeojsonSources = false
     styleExtension.sources.forEach {
       if (it is GeoJsonSource) {
-        hasGeojsonSources = true
         if (it.geoJsonParsed) {
           it.bindTo(style)
+          styleExtension.resourceCount--
         } else {
-          geojsonNotParsedCount++
-          it.geoJsonParsedListener = {
-            geojsonNotParsedCount--
-            it.bindTo(style)
-            if (geojsonNotParsedCount == 0) {
-              loadAllExceptGeojsonSources(style, styleExtension, onStyleLoaded)
+          it.onGeoJsonParsedListener = { geoJson ->
+            geoJson.bindTo(style)
+            styleExtension.resourceCount--
+            if (styleExtension.resourceCount == 0) {
+              onStyleLoaded?.onStyleLoaded(style)
             }
           }
         }
       } else {
         it.bindTo(style)
+        styleExtension.resourceCount--
       }
     }
-    if (hasGeojsonSources) {
-      if (geojsonNotParsedCount == 0) {
-        Logger.e("KIRYLDD", "loadAllExceptGeojsonSources 2")
-        loadAllExceptGeojsonSources(style, styleExtension, onStyleLoaded)
-      }
-    } else {
-      loadAllExceptGeojsonSources(style, styleExtension, onStyleLoaded)
-    }
-  }
-
-  private fun loadAllExceptGeojsonSources(
-    style: Style,
-    styleExtension: StyleContract.StyleExtension,
-    onStyleLoaded: Style.OnStyleLoaded?
-  ) {
     styleExtension.images.forEach {
       it.bindTo(style)
+      styleExtension.resourceCount--
     }
     styleExtension.layers.forEach {
       it.first.bindTo(style, it.second)
+      styleExtension.resourceCount--
     }
     styleExtension.light?.bindTo(style)
     styleExtension.terrain?.bindTo(style)
-    onStyleLoaded?.onStyleLoaded(style)
+    if (styleExtension.resourceCount == 0) {
+      onStyleLoaded?.onStyleLoaded(style)
+    }
   }
 
   private fun initializeStyleLoad(
