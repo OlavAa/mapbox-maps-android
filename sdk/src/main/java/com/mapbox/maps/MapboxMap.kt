@@ -95,9 +95,7 @@ class MapboxMap internal constructor(
     onMapLoadErrorListener: OnMapLoadErrorListener? = null
   ) {
     initializeStyleLoad(onStyleLoaded, onMapLoadErrorListener)
-    handlerMain.post {
-      nativeMapWeakRef.call { (this as StyleManagerInterface).styleURI = styleUri }
-    }
+    nativeMapWeakRef.call { (this as StyleManagerInterface).styleURI = styleUri }
   }
 
   /**
@@ -120,10 +118,8 @@ class MapboxMap internal constructor(
     onMapLoadErrorListener: OnMapLoadErrorListener? = null
   ) {
     initializeStyleLoad(onStyleLoaded, onMapLoadErrorListener)
-    handlerMain.post {
-      nativeMapWeakRef.call {
-        (this as StyleManagerInterface).styleJSON = json
-      }
+    nativeMapWeakRef.call {
+      (this as StyleManagerInterface).styleJSON = json
     }
   }
 
@@ -188,9 +184,6 @@ class MapboxMap internal constructor(
     // clear listeners from previous invocation
     styleObserver.onNewStyleLoad(onStyleLoaded, onMapLoadErrorListener)
     isStyleLoadInitiated = true
-    if (::style.isInitialized) {
-      style.fullyLoaded = false
-    }
   }
 
   /**
@@ -200,7 +193,7 @@ class MapboxMap internal constructor(
    */
   fun getStyle(onStyleLoaded: Style.OnStyleLoaded) {
     if (::style.isInitialized) {
-      if (style.fullyLoaded) {
+      if (style.isStyleLoaded) {
         // style has loaded, notify callback immediately
         onStyleLoaded.onStyleLoaded(style)
       } else {
@@ -217,7 +210,7 @@ class MapboxMap internal constructor(
    * Get the Style of the map synchronously, will return null is style is not loaded yet.
    */
   fun getStyle(): Style? {
-    if (::style.isInitialized && style.fullyLoaded) {
+    if (::style.isInitialized && style.isStyleLoaded) {
       // style has loaded, return it immediately
       return style
     }
@@ -1106,7 +1099,7 @@ class MapboxMap internal constructor(
    * Returns if the style has been fully loaded.
    */
   override fun isFullyLoaded(): Boolean {
-    return style.isFullyLoaded()
+    return style.isStyleLoaded
   }
 
   /**
