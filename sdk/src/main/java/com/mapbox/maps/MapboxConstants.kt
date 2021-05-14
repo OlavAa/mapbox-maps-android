@@ -7,7 +7,7 @@ import java.util.*
 /**
  * Name of the database file.
  */
-const val DATABASE_NAME = "ambient_cache.db"
+const val DATABASE_NAME = "mapbox/ambient_cache.db"
 
 /**
  * Default Locale for data processing (ex: String.toLowerCase(com.mapbox.maps.getMAPBOX_LOCALE, "foo"))
